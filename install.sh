@@ -1,12 +1,12 @@
 #! /bin/bash
 #
 # Raspberry Pi network configuration / AP, MESH install script
+# Light webserver instructions taken from http://www.penguintutor.com/linux/light-webserver
 # Sarah Grant
 # Updated 01 Nov 2015
 #
 # TO-DO
 # - allow a selection of radio drivers
-# - fix addressing to avoid collisions below (peek at pirate box)
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
@@ -48,12 +48,12 @@ CELL_ID=02:12:34:56:78:90
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # BEGIN INSTALLATION PROCESS
 #
-echo "////////////////////////"
-echo "// Welcome to Subnodes!"
+echo "////////////////////////////////////////////////"
+echo "// Welcome to Subnodes with lighttpd installed!"
 echo "//"
 echo ""
 
-read -p "This installation script will install a node.js dashboard and a wireless access point, and will give you the option of additionally configuring a BATMAN-ADV mesh point. Make sure you have one or two USB wifi radios connected to your Raspberry Pi before proceeding. Press any key to continue..."
+read -p "This installation script will install a lighttpd / php / mysql server and a wireless access point, and will give you the option of additionally configuring a BATMAN-ADV mesh point. Make sure you have one or two USB wifi radios connected to your Raspberry Pi before proceeding. Press any key to continue..."
 echo ""
 #
 # CHECK USB WIFI HARDWARE IS FOUND
@@ -71,22 +71,16 @@ echo ""
 #
 # update the packages
 echo "Updating apt-get and installing iw package for network interface configuration..."
-apt-get update && apt-get install -y iw
+apt-get update && apt-get install -y iw lighttpd php5-common php5-cgi php5 mysql-server php5-mysql
+lighty-enable-mod fastcgi-php
+service lighttpd force-reload
+# Change the directory owner and group
+chown www-data:www-data /var/www
+# allow the group to write to the directory
+chmod 775 /var/www
+# Add the pi user to the www-data group
+usermod -a -G www-data pi
 echo ""
-echo "Installing Node.js..."
-wget http://node-arm.herokuapp.com/node_latest_armhf.deb
-sudo dpkg -i node_latest_armhf.deb
-echo ""
-
-# INSTALLING node.js dashboard
-#echo "Installing dashboard..."
-# go back to our subnodes directory
-#cd /home/pi/subnodes/
-
-# download subnodes app dependencies
-#sudo npm install
-#sudo npm install -g nodemon
-#echo "Done!"
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # CONFIGURE A MESH POINT?
