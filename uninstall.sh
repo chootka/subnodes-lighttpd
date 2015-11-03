@@ -60,9 +60,9 @@ case $yn in
 		update-rc.d -f subnodes_ap remove
 		rm /etc/init.d/subnodes_ap
 
-		echo "Deleting subnodes folder			"
+		echo "Deleting subnodes-lighttpd folder			"
 		cd /home/pi/
-		rm -rf /home/pi/subnodes
+		rm -rf /home/pi/subnodes-lighttpd
 		echo -en "[OK]\n"
 		read -p "Do you wish to reboot now? [N] " yn
 		case $yn in

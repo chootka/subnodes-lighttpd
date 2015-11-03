@@ -11,35 +11,8 @@
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# SOME DEFAULT VALUES
-#
-# WIRELESS RADIO DRIVER
-RADIO_DRIVER=nl80211
-
-# ACCESS POINT
-AP_COUNTRY=US
-AP_SSID=subnodes
-AP_CHAN=1
-AP_IP=192.168.3.1
-AP_NETMASK=255.255.255.0
-
-# DNSMASQ STUFF
-DHCP_START=192.168.3.101
-DHCP_END=192.168.3.254
-DHCP_NETMASK=255.255.255.0
-DHCP_LEASE=1h
-
-# FLAGS
-DO_SET_MESH=Nn
-
-# BRIDGE
-BRIDGE_IP=192.168.3.1
-BRIDGE_NETMASK=255.255.255.0
-
-# MESH POINT
-MESH_SSID=meshnode
-MESH_CHAN=3
-CELL_ID=02:12:34:56:78:90
+#  READ configuration file
+. ./settings.config
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # CHECK USER PRIVILEGES
@@ -49,7 +22,7 @@ CELL_ID=02:12:34:56:78:90
 # BEGIN INSTALLATION PROCESS
 #
 echo "////////////////////////////////////////////////"
-echo "// Welcome to Subnodes with lighttpd installed!"
+echo "// Let's install subnodes-lighttpd!"
 echo "//"
 echo ""
 
@@ -89,8 +62,6 @@ clear
 echo "////////////////////////////////////////"
 echo "// Access Point + Mesh Point Settings"
 echo "// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-echo ""
-echo "Please answer the following questions. Hitting return will continue with the default 'No' option"
 echo ""
 read -p "Do you wish to continue and set up your Raspberry Pi as a Mesh Point? [N] " yn
 DO_SET_MESH=$yn
@@ -134,56 +105,6 @@ case $DO_SET_MESH in
 	;;
 esac
 echo -en "[OK]\n"
-
-# ask how they want to configure their access point
-read -p "Wifi Country [$AP_COUNTRY]: " -e t1
-if [ -n "$t1" ]; then AP_COUNTRY="$t1";fi
-
-read -p "Wifi Channel Name [$AP_CHAN]: " -e t1
-if [ -n "$t1" ]; then AP_CHAN="$t1";fi
-
-read -p "Wifi SSID [$AP_SSID]: " -e t1
-if [ -n "$t1" ]; then AP_SSID="$t1";fi
-
-case $DO_SET_MESH in
-	[Nn]* )
-		read -p "AP IP [$AP_IP]: " -e t1
-		if [ -n "$t1" ]; then AP_IP="$t1";fi
-
-		read -p "AP NETMASK [$AP_NETMASK]: " -e t1
-		if [ -n "$t1" ]; then AP_NETMASK="$t1";fi
-	;;
-
-	[Yy]* )
-		read -p "Bridge IP [$BRIDGE_IP]: " -e t1
-		if [ -n "$t1" ]; then BRIDGE_IP="$t1";fi	
-
-		read -p "Bridge Subnet Mask [$BRIDGE_NETMASK]: " -e t1
-		if [ -n "$t1" ]; then AP_CHAN="$t1";fi	
-
-		# ask how they want to configure their mesh point
-		read -p "Mesh Point SSID [$MESH_SSID]: " -e t1
-		if [ -n "$t1" ]; then MESH_SSID="$t1";fi
-
-		read -p "Mesh Point Channel [$MESH_CHAN]: " -e t1
-		if [ -n "$t1" ]; then MESH_CHAN="$t1";fi
-
-		read -p "Mesh Point Cell ID [$CELL_ID]: " -e t1
-		if [ -n "$t1" ]; then CELL_ID="$t1";fi
-	;;
-esac
-
-read -p "DHCP starting address [$DHCP_START]: " -e t1
-if [ -n "$t1" ]; then DHCP_START="$t1";fi
-
-read -p "DHCP ending address [$DHCP_END]: " -e t1
-if [ -n "$t1" ]; then DHCP_END="$t1";fi
-
-read -p "DHCP netmask [$DHCP_NETMASK]: " -e t1
-if [ -n "$t1" ]; then DHCP_NETMASK="$t1";fi
-
-read -p "DHCP length of lease [$DHCP_LEASE]: " -e t1
-if [ -n "$t1" ]; then DHCP_LEASE="$t1";fi
 
 # create hostapd init file
 echo -en "Creating default hostapd file...			"
