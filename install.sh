@@ -71,7 +71,7 @@ echo ""
 #
 # update the packages
 echo "Updating apt-get and installing iw package for network interface configuration..."
-apt-get update && apt-get install -y iw lighttpd php5-common php5-cgi php5 mysql-server php5-mysql
+apt-get update && apt-get install -y iw lighttpd mysql-server php5-common php5-cgi php5 php5-mysql
 lighty-enable-mod fastcgi-php
 service lighttpd force-reload
 # Change the directory owner and group
