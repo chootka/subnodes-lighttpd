@@ -11,7 +11,6 @@ DAEMON_PATH="/home/pi/subnodes"
 
 PIDFILE=/var/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
-WLAN="wlan0"
 PHY="phy0"
 
 	case "$1" in
@@ -20,21 +19,34 @@ PHY="phy0"
 
 			# associate the ap0 interface to a physical devices
 			# check to see if wlan1 exists; use that radio, if so.
-			FOUND=`iw dev | awk '/Interface/ { print $2}' | grep wlan1`
+			FOUND=`iw dev | grep phy#1`
 			if  [ -n "$FOUND" ] ; then
-				WLAN="wlan1"
+				#WLAN="wlan1"
 				PHY="phy1"
 			fi
-			ifconfig $WLAN down
-			iw $WLAN del
+			
+			# delete wlan0 and wlan1, if they exist
+			WLAN0=`iw dev | awk '/Interface/ { print $2}' | grep wlan0`
+			if [ -n "$WLAN0" ] ; then
+				ifconfig $WLAN0 down
+				iw $WLAN0 del
+			fi
+
+			WLAN1=`iw dev | awk '/Interface/ { print $2}' | grep wlan1`
+			if [ -n "$WLAN1" ] ; then
+				ifconfig $WLAN1 down
+				iw $WLAN1 del
+			fi
+
+			# assign ap0 to the hardware device found
 			ifconfig ap0 down
 			iw phy $PHY interface add ap0 type __ap
 			ifconfig ap0 up
 
 			# start the hostapd and dnsmasq services
-			service hostapd restart
-			service dnsmasq restart
-			service lighttpd force-reload
+			service hostapd start
+			service dnsmasq start
+			service lighttpd start
 
 			;;
 		status)
