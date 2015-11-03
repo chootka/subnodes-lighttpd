@@ -245,7 +245,7 @@ EOF
 
 	[Nn]* )
 		cat <<EOF > /etc/dnsmasq.conf
-interface=br0
+interface=ap0
 address=/#/$AP_IP
 address=/apple.com/0.0.0.0
 dhcp-range=$DHCP_START,$DHCP_END,$DHCP_NETMASK,$DHCP_LEASE

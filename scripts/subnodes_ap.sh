@@ -40,6 +40,7 @@ PHY="phy0"
 
 			# assign ap0 to the hardware device found
 			ifconfig ap0 down
+			iw dev ap0 del
 			iw phy $PHY interface add ap0 type __ap
 			ifconfig ap0 up
 
