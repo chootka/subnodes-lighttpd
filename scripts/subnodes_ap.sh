@@ -1,60 +1,45 @@
 #!/bin/sh
-# /etc/init.d/subnodes-lighttpd_ap
-#
-# starts up ap0 interface, dnsmasq and hostapd for broadcasting a wireless network
-# Sarah Grant
-# Updated 01 Nov 2015
+# /etc/init.d/subnodes_ap
+# starts up lighttpd, ap0 interface, hostapd, and dnsmasq for broadcasting a wireless network with captive portal
 
 NAME=subnodes_ap
-DESC="Brings up wireless access point for connecting to lighttpd web server running on the device."
+DESC="Brings up wireless access point for connecting to web server running on the device."
 DAEMON_PATH="/home/pi/subnodes"
-
 PIDFILE=/var/run/$NAME.pid
-SCRIPTNAME=/etc/init.d/$NAME
-PHY="phy0"
+PHY="phy1"
 
 	case "$1" in
 		start)
 			echo "Starting $NAME access point..."
 
 			# associate the ap0 interface to a physical devices
-			# check to see if wlan1 exists; use that radio, if so.
-			FOUND=`iw dev | grep phy#1`
-			if  [ -n "$FOUND" ] ; then
-				#WLAN="wlan1"
-				PHY="phy1"
-			fi
-			
-			# delete wlan0 and wlan1, if they exist
-			WLAN0=`iw dev | awk '/Interface/ { print $2}' | grep wlan0`
-			if [ -n "$WLAN0" ] ; then
-				ifconfig $WLAN0 down
-				iw $WLAN0 del
-			fi
-
 			WLAN1=`iw dev | awk '/Interface/ { print $2}' | grep wlan1`
 			if [ -n "$WLAN1" ] ; then
 				ifconfig $WLAN1 down
 				iw $WLAN1 del
+
+				# assign ap0 to the hardware device found
+				iw phy $PHY interface add ap0 type __ap
 			fi
 
-			# assign ap0 to the hardware device found
-			ifconfig ap0 down
-			iw dev ap0 del
-			iw phy $PHY interface add ap0 type __ap
+			# add ap0 to our bridge
+			brctl addif br0 ap0
+
+			# bring up ap0 wireless access point interface
 			ifconfig ap0 up
 
-			# start the hostapd and dnsmasq services
-			service hostapd start
+			# start services
 			service dnsmasq start
+			hostapd -B /etc/hostapd/hostapd.conf
 			service lighttpd start
-
 			;;
 		status)
 		;;
 		stop)
-			printf "%-50s" "Shutting down $NAME…"
-			service hostapd stop
+
+			ifconfig ap0 down
+
+			/etc/init.d/hostapd stop
             service dnsmasq stop
             service lighttpd stop
 		;;
