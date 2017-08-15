@@ -1,9 +1,10 @@
 #! /bin/bash
 #
 # Raspberry Pi network configuration / AP, MESH install script
-# Contributors: Sarah Grant, Mark Hansen
+# Author: Sarah Grant
+# Contributors: Mark Hansen, Matthias Strubel, Danja Vasiliev
 # took guidance from a script by Paul Miller : https://dl.dropboxusercontent.com/u/1663660/scripts/install-rtl8188cus.sh
-# Updated 11 August 2017
+# Updated 15 August 2017
 #
 # TO-DO
 # - allow a selection of radio drivers
@@ -65,7 +66,45 @@ echo ""
 
 read -p "This installation script will install a lighttpd / php / mysql stack, set up a wireless access point and captive portal, and provide the option of configuring a BATMAN-ADV mesh point. Make sure you have one (or two, if installing the additional mesh point) USB wifi radios connected to your Raspberry Pi before proceeding. Press any key to continue..."
 echo ""
+clear
 
+
+
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# CHECK THAT REQUIRED RADIOS ARE AVAILABLE FOR AP & MESH POINT [IF SELECTED]
+#
+# check that iw list does not fail with 'nl80211 not found'
+echo -en "Checking that USB wifi radio is available for access point..."
+readarray IW < <(iw dev | awk '$1~"phy#"{PHY=$1}; $1=="Interface" && $2~"wlan"{WLAN=$2; sub(/#/, "", PHY); print PHY " " WLAN}')
+if [[ -z $IW ]] ; then
+	echo -en "[FAIL]\n"
+	echo "Warning! Wireless adapter not found! Please plug in a wireless radio after installation completes and before reboot."
+	echo "Installation process will proceed in 5 seconds..."
+	sleep 5
+else
+	echo -en "[OK]\n"
+fi
+
+# now check that iw list finds a radio other than wlan0 if mesh point option was set to 'y' in config file
+case $DO_SET_MESH in
+	[Yy]* )
+		echo -en "Checking that USB wifi radio is available for mesh point..."
+		readarray IW < <(iw dev | awk '$1~"phy#"{PHY=$1}; $1=="Interface" && $2!="wlan0"{WLAN=$2; sub(/#/, "", PHY); print PHY " " WLAN}')
+
+		if [[ -z $IW ]] ; then
+			echo -en "[FAIL]\n"
+			echo "Warning! Second wireless adapter not found! Please plug in an addition wireless radio after installation completes and before reboot."
+			echo "Installation process will proceed in 5 seconds..."
+			sleep 5
+		else
+			echo -en "[OK]\n"
+		fi
+;;
+esac
 
 
 
@@ -77,7 +116,6 @@ echo ""
 # SOFTWARE INSTALL
 #
 
-clear
 # update the packages
 echo "Updating apt-get and installing iw package for network interface configuration..."
 apt-get update && apt-get install -y iw lighttpd mysql-server php5-common php5-cgi php5 php5-mysql
@@ -119,24 +157,25 @@ fi
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# DISABLE DHCPCD SINCE WE ARE RELYING ON STATIC IPs IN A CLOSED NETWORK
+#
+systemctl disable dhcpcd
+systemctl enable networking
+
+
+
+
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # CONFIGURE AN ACCESS POINT WITH CAPTIVE PORTAL
 #
 
 clear
 echo "Configuring Access Point..."
 echo ""
-
-# check that iw list does not fail with 'nl80211 not found'
-echo -en "checking that nl80211 USB wifi radio is plugged in..."
-iw list > /dev/null 2>&1 | grep 'nl80211 not found'
-rc=$?
-if [[ $rc = 0 ]] ; then
-	echo -en "[FAIL]\n"
-	echo "Make sure you are using a wifi radio that runs via the nl80211 driver."
-	exit $rc
-else
-	echo -en "[OK]\n"
-fi
 
 # install required packages
 echo ""
@@ -154,17 +193,6 @@ if [[ $rc != 0 ]] ; then
 else
 	echo -en "[OK]\n"
 fi		
-
-# backup the existing /etc/dhcpcd.conf file
-echo -en "Creating backup of dhcpcd configuration file..."
-cp /etc/dhcpcd.conf /etc/dhcpcd.conf.bak
-rc=$?
-if [[ $rc != 0 ]] ; then
-		echo -en "[FAIL]\n"
-	exit $rc
-else
-	echo -en "[OK]\n"
-fi
 
 # create hostapd init file
 echo -en "Creating default hostapd file..."
@@ -218,28 +246,10 @@ case $DO_SET_MESH in
 		modprobe batman-adv;
 
 		# pass the selected mesh ssid into mesh startup script
-		#sed -i "s/MTU/$MTU/" scripts/subnodes_mesh.sh
-		#sed -i "s/CHAN/$MESH_CHANNEL/" scripts/subnodes_mesh.sh
-		#sed -i "s/CELL_ID/$CELL_ID/" scripts/subnodes_mesh.sh
+		sed -i "s/MTU/$MTU/" scripts/subnodes_mesh.sh
 		sed -i "s/SSID/$MESH_SSID/" scripts/subnodes_mesh.sh
-
-		# append bridge settings to /etc/dhcpcd.conf
-		echo -en "Appending bridge interface settings to /etc/dhcpcd.conf..."
-		cat <<EOT >> /etc/dhcpcd.conf
-denyinterfaces wlan0 br0
-# create ap0
-interface ap0
-static ip_address=$AP_IP
-static netmask=$AP_NETMASK
-EOT
-		rc=$?
-		if [[ $rc != 0 ]] ; then
-		    	echo -en "[FAIL]\n"
-			echo ""
-			exit $rc
-		else
-			echo -en "[OK]\n"
-		fi
+		sed -i "s/CELL_ID/$CELL_ID/" scripts/subnodes_mesh.sh
+		sed -i "s/CHAN/$MESH_CHANNEL/" scripts/subnodes_mesh.sh
 
 		# configure dnsmasq
 		echo -en "Creating dnsmasq configuration file..."
@@ -267,14 +277,16 @@ iface lo inet loopback
 auto eth0
 iface eth0 inet dhcp
 
-auto ap0
-iface ap0 inet static
+auto wlan0
+iface wlan0 inet static
+address $AP_IP
+netmask $AP_NETMASK
 
 auto br0
 iface br0 inet static
 address $BRIDGE_IP
 netmask $BRIDGE_NETMASK
-bridge_ports bat0 ap0
+bridge_ports bat0 wlan0
 bridge_stp off
 
 iface default inet dhcp
@@ -316,9 +328,12 @@ EOF
 			echo -en "[OK]\n"
 		fi
 
-		# COPY OVER THE MESH POINT START UP SCRIPT
+		# COPY OVER START UP SCRIPTS
 		echo ""
-		echo "Adding startup script for mesh point..."
+		echo "Adding startup scripts to init.d..."
+		cp scripts/subnodes_ap.sh /etc/init.d/subnodes_ap
+		chmod 755 /etc/init.d/subnodes_ap
+		update-rc.d subnodes_ap defaults
 		cp scripts/subnodes_mesh.sh /etc/init.d/subnodes_mesh
 		chmod 755 /etc/init.d/subnodes_mesh
 		update-rc.d subnodes_mesh defaults
@@ -339,29 +354,10 @@ EOF
 	# if no mesh point is created, set up network interfaces, hostapd and dnsmasq to operate without a bridge
 		clear
 		
-		# append interface settings to /etc/dhcpcd.conf
-		echo -en "Appending bridge interface settings to /etc/dhcpcd.conf..."
-		cat <<EOT >> /etc/dhcpcd.conf
-denyinterfaces wlan0
-# create ap0
-interface ap0
-static ip_address=$AP_IP
-static netmask=$AP_NETMASK
-EOT
-		rc=$?
-		if [[ $rc != 0 ]] ; then
-		    	echo -en "[FAIL]\n"
-			echo ""
-			exit $rc
-		else
-			echo -en "[OK]\n"
-		fi
-
-
 		# configure dnsmasq
 		echo -en "Creating dnsmasq configuration file..."
 		cat <<EOF > /etc/dnsmasq.conf
-interface=ap0
+interface=wlan0
 address=/#/$AP_IP
 address=/apple.com/0.0.0.0
 dhcp-range=$AP_DHCP_START,$AP_DHCP_END,$DHCP_NETMASK,$DHCP_LEASE
@@ -384,8 +380,10 @@ iface lo inet loopback
 auto eth0
 iface eth0 inet dhcp
 
-auto ap0
-iface ap0 inet static
+auto wlan0
+iface wlan0 inet static
+address $AP_IP
+netmask $AP_NETMASK
 
 iface default inet dhcp
 EOF
@@ -401,7 +399,7 @@ EOF
 		# create hostapd configuration with user's settings
 		echo -en "Creating hostapd.conf file..."
 		cat <<EOF > /etc/hostapd/hostapd.conf
-interface=ap0
+interface=wlan0
 driver=$RADIO_DRIVER
 country_code=$AP_COUNTRY
 ctrl_interface=/var/run/hostapd
@@ -409,7 +407,6 @@ ctrl_interface_group=0
 ssid=$AP_SSID
 hw_mode=g
 channel=$AP_CHAN
-beacon_int=100
 auth_algs=1
 wpa=0
 ap_isolate=1
@@ -424,6 +421,13 @@ EOF
 		else
 			echo -en "[OK]\n"
 		fi
+
+		# COPY OVER START UP SCRIPTS
+		echo ""
+		echo "Adding startup scripts to init.d..."
+		cp scripts/subnodes_ap.sh /etc/init.d/subnodes_ap
+		chmod 755 /etc/init.d/subnodes_ap
+		update-rc.d subnodes_ap defaults
 	;;
 esac
 
@@ -439,15 +443,12 @@ esac
 #
 
 clear
-update-rc.d hostapd enable
+update-rc.d hostapd remove
 update-rc.d dnsmasq enable
-cp scripts/subnodes_ap.sh /etc/init.d/subnodes_ap
-chmod 755 /etc/init.d/subnodes_ap
-update-rc.d subnodes_ap defaults
 
 read -p "Do you wish to reboot now? [N] " yn
 	case $yn in
 		[Yy]* )
 			reboot;;
-		Nn]* ) exit 0;;
+		[Nn]* ) exit 0;;
 	esac

@@ -1,34 +1,52 @@
-#!/bin/sh
+#!/bin/bash
 # /etc/init.d/subnodes_ap
-# starts up lighttpd, ap0 interface, hostapd, and dnsmasq for broadcasting a wireless network with captive portal
+# starts up node.js app, access point interface, hostapd, and dnsmasq for broadcasting a wireless network with captive portal
+
+### BEGIN INIT INFO
+# Provides:          subnodes_ap
+# Required-Start:    dbus
+# Required-Stop:     dbus
+# Should-Start:	     $syslog
+# Should-Stop:       $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Subnodes Access Point
+# Description:       Subnodes Access Point script
+### END INIT INFO
 
 NAME=subnodes_ap
 DESC="Brings up wireless access point for connecting to web server running on the device."
 DAEMON_PATH="/home/pi/subnodes"
 PIDFILE=/var/run/$NAME.pid
-PHY="phy0"
+
+# get first PHY WLAN pair
+readarray IW < <(iw dev | awk '$1~"phy#"{PHY=$1}; $1=="Interface" && $2~"wlan"{WLAN=$2; sub(/#/, "", PHY); print PHY " " WLAN}')
+
+IW0=( ${IW[0]} )
+
+PHY=${IW0[0]}
+WLAN0=${IW0[1]}
+
+echo $PHY $WLAN0 > /tmp/ap.log
 
 	case "$1" in
 		start)
-			echo "Starting $NAME access point..."
+			echo "Starting $NAME access point on interfaces $PHY:$WLAN0..."
 
-			# associate the ap0 interface to a physical devices
-			WLAN0=`iw dev | awk '/Interface/ { print $2}' | grep wlan0`
-			if [ -n "$WLAN0" ] ; then
-				ifconfig $WLAN0 down
-				iw $WLAN0 del
+			# associate the access point interface to a physical devices
+			ifconfig $WLAN0 down
+			# put iface into AP mode
+			iw phy $PHY interface add $WLAN0 type __ap
 
-				# assign ap0 to the hardware device found
-				iw phy $PHY interface add ap0 type __ap
+			# add access point iface to our bridge
+			if [[ -x /sys/class/net/br0 ]]; then
+				brctl addif br0 $WLAN0
 			fi
 
-			# add ap0 to our bridge
-			brctl addif br0 ap0
+			# bring up access point iface wireless access point interface
+			ifconfig $WLAN0 up
 
-			# bring up ap0 wireless access point interface
-			ifconfig ap0 up
-
-			# start services
+			# start the hostapd and dnsmasq services
 			service dnsmasq start
 			hostapd -B /etc/hostapd/hostapd.conf
 			service lighttpd start
@@ -37,7 +55,12 @@ PHY="phy0"
 		;;
 		stop)
 
-			ifconfig ap0 down
+			ifconfig $WLAN0 down
+
+			# delete access point iface to our bridge
+			if [[ -x /sys/class/net/br0 ]]; then
+				brctl delif br0 $WLAN0
+			fi
 
 			/etc/init.d/hostapd stop
             service dnsmasq stop
