@@ -117,8 +117,8 @@ esac
 #
 
 # update the packages
-echo "Updating apt-get and installing iw, lighttpd, sqlite3 and php packages..."
-apt-get update && apt-get install -y iw lighttpd sqlite3 php5 php5-common php5-cgi php5-sqlite
+echo "Updating apt-get and installing iw, batctl, lighttpd, sqlite3 and php packages..."
+apt-get update && apt-get install -y iw batctl lighttpd sqlite3 php5 php5-common php5-cgi php5-sqlite
 lighty-enable-mod fastcgi
 lighty-enable-mod fastcgi-php
 service lighttpd force-reload
@@ -237,9 +237,6 @@ case $DO_SET_MESH in
 	[Yy]* )
 		clear
 		echo "Configuring Raspberry Pi as a BATMAN-ADV mesh point..."
-		echo ""
-		echo "Installing batctl..."
-		apt-get install -y batctl
 		echo ""
 		echo "Enabling the batman-adv kernel module..."
 		# add the batman-adv module to be started on boot
