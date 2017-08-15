@@ -117,9 +117,8 @@ esac
 #
 
 # update the packages
-echo "Updating apt-get and installing iw package for network interface configuration..."
-apt-get update && apt-get install -y iw lighttpd mysql-server php5-common php5-cgi php5 php5-mysql
-lighty-enable-mod fastcgi-php
+echo "Updating apt-get and installing iw, lighttpd, sqlite3 and php packages..."
+apt-get update && apt-get install -y iw lighttpd sqlite3 php5 php5-common php5-cgi php5-sqlite
 service lighttpd force-reload
 # Change the directory owner and group
 chown www-data:www-data /var/www
