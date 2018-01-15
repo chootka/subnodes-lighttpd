@@ -111,6 +111,8 @@ case $DO_SET_MESH in
 		sed -i "s/SSID/$MESH_SSID/" scripts/subnodes_mesh.sh
 		sed -i "s/CELL_ID/$CELL_ID/" scripts/subnodes_mesh.sh
 		sed -i "s/CHAN/$MESH_CHANNEL/" scripts/subnodes_mesh.sh
+		sed -i "s/GW_MODE/$GW_MODE/" scripts/subnodes_mesh.sh
+		#sed -i "s/GW_IP/$GW_IP/" scripts/subnodes_mesh.sh
 
 		# configure dnsmasq
 		echo -en "Creating dnsmasq configuration file..."
@@ -135,6 +137,7 @@ EOF
 auto lo
 iface lo inet loopback
 
+allow-hotplug eth0
 auto eth0
 iface eth0 inet dhcp
 

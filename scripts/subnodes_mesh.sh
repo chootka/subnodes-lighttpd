@@ -39,7 +39,12 @@ echo $PHY $WLAN1 > /tmp/mesh.log
 
 			# add the interface to batman
 			batctl if add $WLAN1
+			# bridge loop avoidance
 			batctl ap_isolation 1
+			batctl bl 1
+			batctl gw_mode GW_MODE
+
+			#route add default gw GW_IP
 
 			# add bat0 to our bridge
 			if [[ -x /sys/class/net/br0 ]]; then
@@ -55,10 +60,7 @@ echo $PHY $WLAN1 > /tmp/mesh.log
 		stop)
 			ifconfig $WLAN1 down
 			ifconfig bat0 down
-
-			# batctl if del mesh0
-			# ifconfig mesh0 mtu 1500
-			# iwconfig mesh0 mode managed
+			brctl delif br0 bat0
 		;;
 
 		restart)
