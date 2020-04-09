@@ -117,8 +117,10 @@ esac
 #
 
 # update the packages
-echo "Updating apt-get and installing iw, dnsutils, samba, samba-common-bin, batctl, lighttpd, sqlite3 and php7.0 packages..."
-apt-get update && apt-get install -y iw dnsutils samba samba-common-bin batctl lighttpd sqlite3 php7.0 php7.0-common php7.0-cgi php7.0-sqlite3
+echo "Updating apt-get and installing iw, dnsutils, samba, samba-common-bin, batctl, lighttpd, sqlite3 and php7.4 packages..."
+wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
+echo "deb https://packages.sury.org/php/ buster main" | sudo tee /etc/apt/sources.list.d/php.list
+apt-get update && apt-get install -y iw dnsutils samba samba-common-bin batctl lighttpd sqlite3 php7.4 php7.4-common php7.4-cgi php7.4-sqlite3
 lighttpd-enable-mod fastcgi
 lighttpd-enable-mod fastcgi-php
 # restart lighttpd
