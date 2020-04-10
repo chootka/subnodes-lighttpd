@@ -3,7 +3,7 @@ subnodes-lighttpd
 
 ![](https://david-dm.org/chootka/subnodes.svg)
 
-Subnodes is an open source project that turns your Linux device running the latest Raspbian release (as of this writing, Stretch Lite) into an offline mesh node and wireless access point.
+Subnodes is an open source project built for Raspberry Pi / Raspbian (as of this writing, Buster Lite) into an offline mesh node and wireless access point.
 
 This project is an initiative focused on streamlining the process of setting up a Raspberry Pi as a wireless access point for distributing content, media, and shared digital experiences. The device becomes a web server, creating its own local area network, and does not connect with the internet. This is key for the sake of offering a space where people can communicate anonymously and freely, as well as maximizing the portability of the network (no dependibility on an internet connection means the device can be taken and remain active anywhere). 
 
@@ -11,9 +11,9 @@ The device can also be configured as a BATMAN Advanced mesh node, enabling it to
 
 How to Install
 --------------
-Assuming you are starting with a fresh [Raspbian Stretch Lite](http://www.raspberrypi.org/downloads/) (Latest tested version: November 2018) installed on your SD card, these are the steps for setting up subnodes on your Raspberry Pi. It is also assumed that you have two wireless USB adapters attached to your RPi. They both must be running the nl80211 driver. [This guide](https://github.com/phillymesh/802.11s-adapters/blob/master/README.md) will help you find a suitable radio. If you are running a Raspberry Pi 3 or Pi Zero W, you only need one additional radio for the mesh point. The access point will be set up utilizing the Pi's internal wireless radio.
+Assuming you are starting with a fresh [Raspbian Buster Lite](http://www.raspberrypi.org/downloads/) (Latest tested version: Feb 2020) installed on your SD card, these are the steps for setting up subnodes on your Raspberry Pi. It is also assumed that you have two wireless USB adapters attached to your RPi. They both must be running the nl80211 driver. [This guide](https://github.com/phillymesh/802.11s-adapters/blob/master/README.md) will help you find a suitable radio. If you are running a Raspberry Pi 3 or Pi Zero W, you only need one additional radio for the mesh point. Make sure the extra radio support ad hoc mode. The access point will be set up utilizing the Pi's internal wireless radio.
 
-Also, if this is your first time connecting to your Raspberry Pi headlessly (i.e. via SSH), you must first enable SSH by placing an empty file with no filename extension simple called `ssh` in the root of your SD card.
+Also, if this is your first time connecting to your Raspberry Pi headlessly (i.e. via SSH), you must first enable SSH by placing an empty file with no filename extension simply called `ssh` in the root of your SD card.
 
 * configure your Raspberry Pi with a new password and locale information. 
   
