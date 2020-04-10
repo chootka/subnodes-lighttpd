@@ -117,8 +117,8 @@ esac
 #
 
 # update the packages
-echo "Updating apt-get and installing iw, dnsutils, samba, samba-common-bin, batctl, lighttpd, sqlite3 and php7.0 packages..."
-apt-get update && apt-get install -y iw dnsutils samba samba-common-bin batctl lighttpd sqlite3 php7.0 php7.0-common php7.0-cgi php7.0-sqlite3
+echo "Updating apt-get and installing iw, dnsutils, samba, samba-common-bin, batctl, lighttpd, sqlite3 and php packages..."
+apt-get update && apt-get install -y iw dnsutils samba samba-common-bin batctl lighttpd sqlite3 php php-common php-cgi php-sqlite3
 lighttpd-enable-mod fastcgi
 lighttpd-enable-mod fastcgi-php
 # restart lighttpd
