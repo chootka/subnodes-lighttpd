@@ -4,7 +4,7 @@
 # Author: Sarah Grant
 # Contributors: Mark Hansen, Matthias Strubel, Danja Vasiliev
 # took guidance from a script by Paul Miller : https://dl.dropboxusercontent.com/u/1663660/scripts/install-rtl8188cus.sh
-# Updated 15 August 2017
+# Updated 10 April 2020
 #
 # TO-DO
 # - allow a selection of radio drivers
